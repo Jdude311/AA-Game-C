@@ -1,4 +1,4 @@
-all: main
+all: main run
 
 CC = clang
 override CFLAGS += -g -Wno-everything -pthread -lm
@@ -20,6 +20,9 @@ main: $(OBJS)
 
 main-debug: $(OBJS)
 	$(CC) $(CFLAGS) -O0 $(OBJS) -o "$@"
+
+run:
+	./main
 
 clean:
 	rm -f $(OBJS) $(DEPS) main main-debug

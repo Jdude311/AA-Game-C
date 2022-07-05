@@ -29,11 +29,8 @@ struct EnemyPlane {
 typedef struct EnemyPlane EnemyPlane;
 
 void collideEnemyPlane (void* self, void* obj) {
-    printf("balin\n");
-    ((CollisionObject*) self)->onCollide(*self);
-    printf("sab\n");
+    ((CollisionObject*) self)->onCollide(self);
     ((CollisionObject*) obj)->onCollide(obj);
-    printf("seabass\n");
 }
 
 void onCollideEnemyPlane (void* self) {
