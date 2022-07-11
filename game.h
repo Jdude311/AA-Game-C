@@ -1,4 +1,5 @@
-// Game Object Position
+
+// Game Object
 typedef struct GameObject GameObject;
 struct GameObject {
     unsigned short x;
@@ -56,7 +57,7 @@ void onCollideEnemyPlane (GameObject* self) {
 
 GameObject createEnemyPlane (unsigned short x,
                              unsigned short y,
-                             unsigned short obj_index,
+                             unsigned char obj_index,
                              unsigned char health) {
     GameObject temp = {
         .x = x,
@@ -71,4 +72,54 @@ GameObject createEnemyPlane (unsigned short x,
     return temp;
 }
 
-/* COLLISION MAP */
+// Player
+typedef struct Player Player;
+struct Player {
+    GameObject game_object;
+    int score;
+    void (*take_input)(Player *);
+};
+
+void drawPlayer (GameObject* self) {
+    printf("Player %d!\n", self -> obj_index);
+}
+
+void drawHitboxPlayer (GameObject* self) {
+    // TODO implement
+}
+
+void collidePlayer (GameObject* self, GameObject* other) {
+    printf("Collision from Player object %d with object %d\n", self -> obj_index, other -> obj_index);
+    self->on_collide(self);
+    other->on_collide(other);
+}
+
+void onCollidePlayer (GameObject* self) {
+    self->health--;
+    printf("EnemyPlane %d at health %d\n", self -> obj_index, self -> health);
+    // TODO implement
+ }
+
+void takeInputPlayer (Player* self) {
+    // TODO implement
+}
+
+Player createPlayer (unsigned short x,
+                     unsigned short y,
+                     unsigned char obj_index,
+                     unsigned char health) {
+    Player temp = {
+        .game_object = {
+            .x = x,
+            .y = y,
+            .obj_index = obj_index,
+            .health = health,
+            .draw = &drawPlayer,
+            .draw_hitbox = &drawHitboxPlayer,
+            .collide = &collidePlayer,
+            .on_collide = &onCollidePlayer,
+        },
+        .score = 0,
+        .take_input = &takeInputPlayer,
+    };
+}
