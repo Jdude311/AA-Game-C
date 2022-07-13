@@ -1,4 +1,12 @@
 
+/* LIBRARIES */
+#include <GL/glut.h> // for graphics
+
+/* SET UP OPENGL WINDOW */
+
+
+
+/* DEFINE BASE OBJECTs */
 // Game Object
 typedef struct GameObject GameObject;
 struct GameObject {
