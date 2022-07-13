@@ -96,8 +96,7 @@ void collidePlayer (GameObject* self, GameObject* other) {
 
 void onCollidePlayer (GameObject* self) {
     self->health--;
-    printf("EnemyPlane %d at health %d\n", self -> obj_index, self -> health);
-    // TODO implement
+    printf("Player %d at health %d\n", self -> obj_index, self -> health);
  }
 
 void takeInputPlayer (Player* self) {
@@ -122,4 +121,5 @@ Player createPlayer (unsigned short x,
         .score = 0,
         .take_input = &takeInputPlayer,
     };
+    return temp;
 }
