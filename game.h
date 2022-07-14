@@ -2,10 +2,6 @@
 /* LIBRARIES */
 #include <GL/glut.h> // for graphics
 
-/* SET UP OPENGL WINDOW */
-
-
-
 /* DEFINE BASE OBJECTs */
 // Game Object
 typedef struct GameObject GameObject;
@@ -42,9 +38,39 @@ GameObject createGameObject (unsigned short x,
 }
 
 /* DEFINE OBJECTS */
+// Dummy object
+void drawDummy (GameObject* self) {}
+
+void drawHitboxDummy (GameObject* self) {}
+
+void collideDummy (GameObject* self, GameObject* other) {}
+
+void onCollideDummy (GameObject* self) {}
+
+GameObject createDummy () {
+    GameObject temp = {
+        .x = 0,
+        .y = 0,
+        .obj_index = 0,
+        .health = 0,
+        .draw = &drawDummy,
+        .draw_hitbox = &drawHitboxDummy,
+        .collide = &collideDummy,
+        .on_collide = &onCollideDummy,
+    };
+    return temp;
+}
+
 // Enemy Plane
 void drawEnemyPlane (GameObject* self) {
     printf("EnemyPlane %d!\n", self -> obj_index);
+    glBegin(GL_QUADS);
+        glColor3f(1.0f, 0.0f, 0.0f);
+        glVertex2f(self -> x * 4, self -> y * 4);
+        glVertex2f(self -> x * 4 + 4, self -> y * 4);
+        glVertex2f(self -> x * 4 + 4, self -> y * 4 + 4);
+        glVertex2f(self -> x * 4, self -> y * 4 + 4);
+    glEnd();
 }
 
 void drawHitboxEnemyPlane (GameObject* self) {
