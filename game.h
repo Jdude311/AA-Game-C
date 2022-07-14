@@ -49,7 +49,7 @@ void onCollideDummy (GameObject* self) {}
 
 GameObject createDummy () {
     GameObject temp = {
-        .x = 0,
+        .x = 3,
         .y = 0,
         .obj_index = 0,
         .health = 0,
@@ -63,13 +63,14 @@ GameObject createDummy () {
 
 // Enemy Plane
 void drawEnemyPlane (GameObject* self) {
-    printf("EnemyPlane %d!\n", self -> obj_index);
+    short h_factor = glutGet(GLUT_SCREEN_HEIGHT)/256;
+    short w_factor = glutGet(GLUT_SCREEN_WIDTH)/256;
     glBegin(GL_QUADS);
         glColor3f(1.0f, 0.0f, 0.0f);
-        glVertex2f(self -> x * 4, self -> y * 4);
-        glVertex2f(self -> x * 4 + 4, self -> y * 4);
-        glVertex2f(self -> x * 4 + 4, self -> y * 4 + 4);
-        glVertex2f(self -> x * 4, self -> y * 4 + 4);
+        glVertex2f(-0.5, -0.5);
+        glVertex2f( 0.5f, -0.5f);
+        glVertex2f( 0.5f,  0.5f);
+        glVertex2f(-0.5f,  0.5f);
     glEnd();
 }
 
