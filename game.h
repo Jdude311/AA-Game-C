@@ -2,6 +2,29 @@
 /* LIBRARIES */
 #include <GL/glut.h> // for graphics
 
+/* CONSTANTS */
+unsigned short game_width = 480;
+unsigned short game_height = 480;
+
+/* UTILITY FUNCTIONS */
+void placePixel (unsigned short x, unsigned short y, float r, float g, float b) {
+    glutGet(GLUT_SCREEN_HEIGHT);
+    glutGet(GLUT_SCREEN_WIDTH);
+    x = (float)x;
+    y = (float)y;
+    glBegin(GL_QUADS);
+        glColor3f(r, g, b);
+        glVertex2f(2.0*(((float)x/(0.5*game_width))-0.5)           ,
+                   2.0*(((float)y/(0.5*game_height))-0.5)           );
+        glVertex2f(2.0*(((float)x/(0.5*game_width))-0.5)+(1.0/60.0),
+                   2.0*(((float)y/(0.5*game_height))-0.5)           );
+        glVertex2f(2.0*(((float)x/(0.5*game_width))-0.5)+(1.0/60.0),
+                   2.0*(((float)y/(0.5*game_height))-0.5)+(1.0/60.0));
+        glVertex2f(2.0*(((float)x/(0.5*game_width))-0.5)           ,
+                   2.0*(((float)y/(0.5*game_height))-0.5)+(1.0/60.0));
+    glEnd();
+}
+
 /* DEFINE BASE OBJECTs */
 // Game Object
 typedef struct GameObject GameObject;
@@ -63,15 +86,24 @@ GameObject createDummy () {
 
 // Enemy Plane
 void drawEnemyPlane (GameObject* self) {
-    short h_factor = glutGet(GLUT_SCREEN_HEIGHT)/256;
-    short w_factor = glutGet(GLUT_SCREEN_WIDTH)/256;
-    glBegin(GL_QUADS);
-        glColor3f(1.0f, 0.0f, 0.0f);
-        glVertex2f(-0.5, -0.5);
-        glVertex2f( 0.5f, -0.5f);
-        glVertex2f( 0.5f,  0.5f);
-        glVertex2f(-0.5f,  0.5f);
-    glEnd();
+    // Vertical E
+    placePixel(self -> x  , self -> y  , 1.0, 0.0, 0.0);
+    placePixel(self -> x  , self -> y-1, 1.0, 0.0, 0.0);
+    placePixel(self -> x  , self -> y-2, 1.0, 0.0, 0.0);
+    placePixel(self -> x  , self -> y-3, 1.0, 0.0, 0.0);
+    placePixel(self -> x  , self -> y-4, 1.0, 0.0, 0.0);
+    placePixel(self -> x  , self -> y-5, 1.0, 0.0, 0.0);
+    placePixel(self -> x  , self -> y-6, 1.0, 0.0, 0.0);
+    placePixel(self -> x  , self -> y-7, 1.0, 0.0, 0.0);
+
+    // Top E
+    placePixel(self -> x+1, self -> y-7, 1.0, 0.0, 0.0);
+    placePixel(self -> x+1, self -> y-7, 1.0, 0.0, 0.0);
+    placePixel(self -> x+1, self -> y-7, 1.0, 0.0, 0.0);
+    placePixel(self -> x+1, self -> y-7, 1.0, 0.0, 0.0);
+    placePixel(self -> x+1, self -> y-7, 1.0, 0.0, 0.0);
+    placePixel(self -> x+1, self -> y-7, 1.0, 0.0, 0.0);
+    placePixel(self -> x+1, self -> y-7, 1.0, 0.0, 0.0);
 }
 
 void drawHitboxEnemyPlane (GameObject* self) {

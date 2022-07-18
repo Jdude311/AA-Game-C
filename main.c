@@ -15,7 +15,6 @@ GameObject** game_objects;
 void displayGameObjects (GameObject** game_objects, unsigned char len) {
     // TODO implement opengl display callback
     for (int i = 0; i < 255; i++) {
-        printf("Obj index %d\n", game_objects[i] -> obj_index);
         game_objects[i] -> draw(game_objects[i]);
     }
     printf("test %d\n", game_objects[2] -> obj_index);
@@ -43,7 +42,6 @@ int main (int argc, char** argv) {
     // Fill game list with dummy object
     GameObject dummy = createDummy();
     for (int i = 0; i < NUM_GAME_OBJECTS; i++) {
-        printf("%d\n", i);
         game_objects[i] = &dummy;
     }
 
@@ -54,10 +52,10 @@ int main (int argc, char** argv) {
     // Initialize enemies
     unsigned char NUM_ENEMY_PLANES = 10;
     GameObject enemy_planes[NUM_ENEMY_PLANES];
-    for (int i = 1; i < NUM_ENEMY_PLANES; i++) {
+    for (int i = 0; i < NUM_ENEMY_PLANES; i++) {
         enemy_planes[i] = createEnemyPlane(10, 10, i, 10);
         // Put object pointers in game_objects list
-        game_objects[i] = &enemy_planes[i];
+        game_objects[i+1] = &enemy_planes[i];
     }
 
     // Graphics
