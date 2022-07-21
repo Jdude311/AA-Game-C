@@ -9,15 +9,44 @@
 // Initialize list for all GameObjects
 #define NUM_GAME_OBJECTS 255
 GameObject** game_objects;
+// Initialize player
+Player player;
+// Initialize collision list
+unsigned char* collision_list;
 
 /* FUNCTION DEFINITIONS */
+// Keyboard callback
+void keyboard_input (unsigned char key, int x, int y) {
+    printf("key %d\n", key);
+    player.take_input(&player, key);
+}
+
+// Update game objects
+void updateGameObjects (GameObject** game_objects, unsigned char len) {
+    for (int i = 0; i < len; i++) {
+        game_objects[i] -> draw_hitbox(game_objects[i], &collision_list);
+        game_objects[i] -> move(game_objects[i]);
+    }
+}
+
+// Idle function callback
+void update () {
+    updateGameObjects(game_objects, NUM_GAME_OBJECTS);
+}
+
 // Display game objects
 void displayGameObjects (GameObject** game_objects, unsigned char len) {
     // TODO implement opengl display callback
-    for (int i = 0; i < 255; i++) {
+    for (int i = 0; i < len; i++) {
         game_objects[i] -> draw(game_objects[i]);
     }
-    printf("test %d\n", game_objects[2] -> obj_index);
+}
+
+// GLUT timer function
+void timer () {
+    glutTimerFunc(1000/60.0, timer, 0);
+    update();
+    glutPostRedisplay();
 }
 
 // GLUT display callback
@@ -36,6 +65,12 @@ void display () {
 // Driver function
 int main (int argc, char** argv) {
     /* SETUP */
+    // Initialize collision objects list
+    collision_list = malloc(sizeof(unsigned char) * game_width * game_height);
+    for (int i = 0; i < game_width * game_height; i++) {
+        collision_list[i] = 255;
+    }
+
     // Initialize game objects list
     game_objects = malloc(sizeof(GameObject*) * NUM_GAME_OBJECTS+1);
 
@@ -46,14 +81,14 @@ int main (int argc, char** argv) {
     }
 
     // Initialize player
-    Player player = createPlayer(0, 0, 0, 10);
+    player = createPlayer(240, 240, 0, 10);
     game_objects[0] = &(player.game_object);
 
     // Initialize enemies
     unsigned char NUM_ENEMY_PLANES = 10;
     GameObject enemy_planes[NUM_ENEMY_PLANES];
     for (int i = 0; i < NUM_ENEMY_PLANES; i++) {
-        enemy_planes[i] = createEnemyPlane(10, 10, i, 10);
+        enemy_planes[i] = createEnemyPlane(240, 240, 0, 3, i+1, 10);
         // Put object pointers in game_objects list
         game_objects[i+1] = &enemy_planes[i];
     }
@@ -63,8 +98,10 @@ int main (int argc, char** argv) {
     glutCreateWindow("The Video Game");
     glutInitWindowSize(320, 320);
     glutInitWindowPosition(0,0);
+    //glutIdleFunc(&update);
     glutDisplayFunc(&display);
-
+    glutTimerFunc(1, timer, 0);
+    glutKeyboardFunc(keyboard_input);
 
     /* TEST CLASSES */
     enemy_planes[1].collide(&enemy_planes[1], &enemy_planes[2]);
