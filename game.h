@@ -243,17 +243,24 @@ void checkCollisionsEnemyPlane (GameObject* self) {
     int i = 0;
     for (int xx = 0; xx < 8; xx++) {
         for (int yy = 0; yy < 8; yy++) {
-            i = game_width * (self -> y + yy) + (self -> x + xx);
-            if (i < 0 || xx + self -> x > game_width || yy + self -> y > game_height) break;
-            if (check &&
-             game.game_objects[game.collision_list[i]] -> type != self -> type &&
-             game.game_objects[game.collision_list[i]] -> type >= 0 &&
-             game.collision_list[i] != self -> obj_index) {
-                printf("balls %f %f\n", self -> x, self -> y);
+            i = game_width * ((int) self -> y + yy) + ((int) self -> x + xx);
+            if (self -> x + xx >= 0 &&
+                self -> x + xx < game_width &&
+                self -> y + yy >= 0 &&
+                self -> y + yy < game_height &&
+                check &&
+                game.game_objects[game.collision_list[i]] -> type != self -> type &&
+                game.game_objects[game.collision_list[i]] -> type >= 0 &&
+                game.collision_list[i] != self -> obj_index) {
                 check = false;
-                /* self -> collide(self, game.game_objects[game.collision_list[i]]); */
+                self -> collide(self, game.game_objects[game.collision_list[i]]);
             }
-            game.collision_list[i] = self -> obj_index;
+            if (self -> x + xx >= 0 &&
+                self -> x + xx < game_width &&
+                self -> y + yy >= 0 &&
+                self -> y + yy < game_height) {
+                game.collision_list[i] = self -> obj_index;
+            }
         }
     }
 }
@@ -322,15 +329,20 @@ void checkCollisionsPlayer (GameObject* self) {
     int i = 0;
     for (int xx = 0; xx < 8; xx++) {
         for (int yy = 0; yy < 8; yy++) {
-            i = game_width * (self -> y + yy) + (self -> x + xx);
-            if (i < 0 || xx + self -> x > game_width || yy + self -> y > game_height) break;
+            i = game_width * ((int) self -> y + yy) + ((int) self -> x + xx);
             if (check &&
-             game.collision_list[i] != 255 &&
-             game.collision_list[i] != self -> obj_index) {
+                game.game_objects[game.collision_list[i]] -> type != self -> type &&
+                game.game_objects[game.collision_list[i]] -> type >= 0 &&
+                game.collision_list[i] != self -> obj_index) {
                 check = false;
                 self -> collide(self, game.game_objects[game.collision_list[i]]);
             }
-            game.collision_list[i] = self -> obj_index;
+            if (self -> x + xx >= 0 &&
+                self -> x + xx < game_width &&
+                self -> y + yy >= 0 &&
+                self -> y + yy < game_height) {
+                game.collision_list[i] = self -> obj_index;
+            }
         }
     }
 }
