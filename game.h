@@ -283,14 +283,14 @@ void checkCollisionsEnemyPlane (GameObject* self) {
 }
 
 void collideEnemyPlane (GameObject* self, GameObject* other) {
-    printf("Collision from EnemyPlane object %d with object %d\n", self -> obj_index, other -> obj_index);
+    /* printf("Collision from EnemyPlane object %d with object %d\n", self -> obj_index, other -> obj_index); */
     self->on_collide(self);
     other->on_collide(other);
 }
 
 void onCollideEnemyPlane (GameObject* self) {
     if (self -> health > 0) self -> health--;
-    printf("EnemyPlane %d at health %d\n", self -> obj_index, self -> health);
+    /* printf("EnemyPlane %d at health %d\n", self -> obj_index, self -> health); */
     // TODO implement
  }
 
@@ -382,7 +382,7 @@ void checkCollisionsBullet (GameObject* self) {
 }
 
 void collideBullet (GameObject* self, GameObject* other) {
-    printf("Collision from Bullet object %d with object %d\n", self -> obj_index, other -> obj_index);
+    /* printf("Collision from Bullet object %d with object %d\n", self -> obj_index, other -> obj_index); */
     self->on_collide(self);
     other->on_collide(other);
 }
@@ -390,7 +390,7 @@ void collideBullet (GameObject* self, GameObject* other) {
 void onCollideBullet (GameObject* self) {
     if (self -> health > 0) self -> health--;
     game.game_objects[self -> obj_index] = &game.dummy;
-    printf("Bullet %d hit, freeing spot with dummy\n", self -> obj_index);
+    /* printf("Bullet %d hit, freeing spot with dummy\n", self -> obj_index); */
     // TODO implement
  }
 
@@ -471,46 +471,46 @@ void collidePlayer (GameObject* self, GameObject* other) {
 
 void onCollidePlayer (GameObject* self) {
     game.player.score++;
-    printf("Player %d score %d!!!\n", self -> obj_index, game.player.score);
+    /* printf("Player %d score %d!!!\n", self -> obj_index, game.player.score); */
 }
 
 void inputPlayer (Player* self, bool* pressed_keys) {
+    self -> game_object.velocity = 0;
+    int w = glutGet(GLUT_WINDOW_WIDTH);
+    int h = glutGet(GLUT_WINDOW_HEIGHT);
+    float x = ((float) (game.mouse_x) / w)*game_width - self->game_object.x;
+    float y = ((float) (h - game.mouse_y) / h)*game_height - self->game_object.y;
+    float angle = 180*atan2(y,x)/PI;
+    self -> game_object.angle = angle;
+
     for (unsigned char key = 0; key < 255; key++) {
         switch (key * pressed_keys[key]) {
             case *"a": // A
                 /* self -> game_object.angle += 5; */
-                /* self -> game_object.velocity = 5; */
-                /* self -> game_object.angle = 0; */
                 break;
             case *"d": // D
                 /* self -> game_object.angle -= 5; */
-                /* self -> game_object.velocity = 5; */
-                /* self -> game_object.angle = 180; */
                 break;
-            /* case *"w": // W */
-            /*     self -> game_object.velocity += 0.1; */
-            /*     if (self -> game_object.velocity > 10) */
-            /*         self -> game_object.velocity = 10; */
-            /*     break; */
-            /* case *"s": // S */
-            /*     self -> game_object.velocity -= 0.1; */
-            /*     if (self -> game_object.velocity < 0) */
-            /*         self -> game_object.velocity = 0; */
-            /*     break; */
+            case *"w": // W
+                if (abs((int)(x+y)) >= 1) self -> game_object.velocity = 2.0;
+                /* self -> game_object.velocity += 0.1; */
+                /* if (self -> game_object.velocity > 10) */
+                /*     self -> game_object.velocity = 10; */
+                break;
+            case *"s": // S
+                /* self -> game_object.velocity -= 0.1; */
+                /* if (self -> game_object.velocity < 0) */
+                /*     self -> game_object.velocity = 0; */
+                break;
             case *" ":; // space, which is the shoot button
-                int w = glutGet(GLUT_WINDOW_WIDTH);
-                int h = glutGet(GLUT_WINDOW_HEIGHT);
-                float x = ((float) (game.mouse_x) / w)*game_width - self->game_object.x;
-                float y = ((float) (h - game.mouse_y) / h)*game_height - self->game_object.y;
-
-                self -> shoot(self, 180*atan2(y,x)/PI);
+                self -> shoot(self, angle);
                 break;
         }
     }
 }
 
 void shootPlayer (Player* self, float angle) {
-    if (self -> shoot_timer < 5) {
+    if (self -> shoot_timer < 2) {
         self -> shoot_timer++;
         return;
     }

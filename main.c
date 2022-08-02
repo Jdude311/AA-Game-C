@@ -81,7 +81,7 @@ int main (int argc, char** argv) {
     game.game_objects[0] = &(game.player.game_object);
 
     // Initialize enemies
-    unsigned char NUM_ENEMY_PLANES = 20;
+    unsigned char NUM_ENEMY_PLANES = 128;
     GameObject enemy_planes[NUM_ENEMY_PLANES];
     for (int i = 0; i < NUM_ENEMY_PLANES; i++) {
         enemy_planes[i] = createEnemyPlane(
@@ -90,7 +90,7 @@ int main (int argc, char** argv) {
             rand() % 360,
             rand() % 4+2,
             i+1,
-            10);
+            5);
         // Put object pointers in game_objects list
         game.game_objects[i+1] = &enemy_planes[i];
         game.game_objects[i+1] -> move(game.game_objects[i+1]);
