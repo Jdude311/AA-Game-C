@@ -215,7 +215,7 @@ void moveEnemyPlane (GameObject* self) {
         self -> x += game_width;
     }
     if (self -> y > game_height) {
-        self -> y -= game_height + 300;
+        self -> y -= game_height;
     } else if (self -> y < 0) {
         self -> y += game_height;
     }
@@ -487,6 +487,7 @@ void checkCollisionsPlayer (GameObject* self) {
     for (int xx = 0; xx < 8; xx++) {
         for (int yy = 0; yy < 8; yy++) {
             i = game_width * ((int) self -> y + yy) + ((int) self -> x + xx);
+            if (i < 0) break;
             if (check &&
                 game.game_objects[game.collision_list[i]] -> type != self -> type &&
                 game.game_objects[game.collision_list[i]] -> type >= 0 &&
@@ -531,43 +532,38 @@ void updatePlayer (GameObject* self) {
 }
 
 void inputPlayer (Player* self, bool* pressed_keys) {
-    self -> game_object.velocity = 0;
     int w = glutGet(GLUT_WINDOW_WIDTH);
     int h = glutGet(GLUT_WINDOW_HEIGHT);
     float x = ((float) (game.mouse_x) / w)*game_width - self->game_object.x;
     float y = ((float) (h - game.mouse_y) / h)*game_height - self->game_object.y;
     float angle = 180*atan2(y,x)/PI;
-    self -> game_object.angle = angle;
+    //self -> game_object.angle = angle;
 
     for (unsigned char key = 0; key < 255; key++) {
         switch (key * pressed_keys[key]) {
             case *"a": // A
-                self -> game_object.angle = angle + 90;
-                if (abs((int)(x+y)) >= 1) self -> game_object.velocity = 2.0;
+                self -> game_object.angle += 10.0/(self -> game_object.velocity+1);
+                if (self -> game_object.velocity > 2) self -> game_object.velocity -= 0.05;
                 break;
             case *"d": // D
-                self -> game_object.angle = angle - 90;
-                if (abs((int)(x+y)) >= 1) self -> game_object.velocity = 2.0;
+                self -> game_object.angle -= 10.0/(self -> game_object.velocity+1);
+                self -> game_object.velocity -= 0.05;
                 break;
             case *"w": // W
-                if (abs((int)(x+y)) >= 1) self -> game_object.velocity = 2.0;
-                /* self -> game_object.velocity += 0.1; */
-                /* if (self -> game_object.velocity > 10) */
-                /*     self -> game_object.velocity = 10; */
+                self -> game_object.velocity += 0.1;
                 break;
             case *"s": // S
-                /* self -> game_object.velocity -= 0.1; */
-                /* if (self -> game_object.velocity < 0) */
-                /*     self -> game_object.velocity = 0; */
-                self -> game_object.angle = angle - 180;
-                if (abs((int)(x+y)) >= 1) self -> game_object.velocity = 2.0;
-                /* if (abs((int)(x+y)) >= 1) self -> game_object.velocity = -2.0; */
+                self -> game_object.velocity -= 0.1;
                 break;
             case *" ":; // space, which is the shoot button
-                self -> shoot(self, angle);
+                self -> shoot(self, self -> game_object.angle);
                 break;
         }
     }
+    if (self -> game_object.velocity < 0)
+        self -> game_object.velocity = 0;
+    if (self -> game_object.velocity > 10)
+        self -> game_object.velocity = 10;
 }
 
 void shootPlayer (Player* self, float angle) {
