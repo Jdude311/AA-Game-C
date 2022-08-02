@@ -5,8 +5,8 @@
 #include <stdbool.h> // booleans, duh
 
 /* CONSTANTS */
-unsigned short game_width = 680;
-unsigned short game_height = 680;
+unsigned short game_width = 1920;
+unsigned short game_height = 1080;
 
 #define NUM_GAME_OBJECTS 255
 
@@ -49,6 +49,8 @@ struct GameObject {
     void (*check_collisions)(GameObject*); // self
     void (*collide)(GameObject*, GameObject*); // self, other obj
     void (*on_collide)(GameObject*); // self
+    void (*die)(GameObject*); // self
+    void (*update)(GameObject*); // self
 };
 
 typedef struct Player Player;
@@ -89,8 +91,7 @@ void update () {
     }
 
     for (int i = 0; i < NUM_GAME_OBJECTS; i++) {
-        game.game_objects[i] -> check_collisions(game.game_objects[i]);
-        game.game_objects[i] -> move(game.game_objects[i]);
+        game.game_objects[i] -> update(game.game_objects[i]);
     }
     game.player.input(&game.player, game.pressed_keys);
 }
@@ -178,6 +179,10 @@ void collideDummy (GameObject* self, GameObject* other) {}
 
 void onCollideDummy (GameObject* self) {}
 
+void dieDummy (GameObject* self) {}
+
+void updateDummy (GameObject* self) {}
+
 GameObject createDummy () {
     GameObject temp = {
         .type = -1,
@@ -192,6 +197,8 @@ GameObject createDummy () {
         .check_collisions = &checkCollisionsDummy,
         .collide = &collideDummy,
         .on_collide = &onCollideDummy,
+        .die = &dieDummy,
+        .update = &updateDummy,
     };
     return temp;
 }
@@ -208,54 +215,46 @@ void moveEnemyPlane (GameObject* self) {
         self -> x += game_width;
     }
     if (self -> y > game_height) {
-        self -> y -= game_height;
+        self -> y -= game_height + 300;
     } else if (self -> y < 0) {
         self -> y += game_height;
     }
 }
 
 void drawEnemyPlane (GameObject* self) {
-    if (self -> health == 0) return;
-    // Vertical E
-    placePixel(self -> x  , self -> y  , 1.0, 0.0, 0.0);
-    placePixel(self -> x  , self -> y-1, 1.0, 0.0, 0.0);
-    placePixel(self -> x  , self -> y-2, 1.0, 0.0, 0.0);
-    placePixel(self -> x  , self -> y-3, 1.0, 0.0, 0.0);
-    placePixel(self -> x  , self -> y-4, 1.0, 0.0, 0.0);
-    placePixel(self -> x  , self -> y-5, 1.0, 0.0, 0.0);
-    placePixel(self -> x  , self -> y-6, 1.0, 0.0, 0.0);
-    placePixel(self -> x  , self -> y-7, 1.0, 0.0, 0.0);
+    short xx;
+    short yy;
 
-    // Top E
-    placePixel(self -> x+1, self -> y  , 1.0, 0.0, 0.0);
-    placePixel(self -> x+2, self -> y  , 1.0, 0.0, 0.0);
-    placePixel(self -> x+3, self -> y  , 1.0, 0.0, 0.0);
-    placePixel(self -> x+4, self -> y  , 1.0, 0.0, 0.0);
-    placePixel(self -> x+5, self -> y  , 1.0, 0.0, 0.0);
-    placePixel(self -> x+6, self -> y  , 1.0, 0.0, 0.0);
-    placePixel(self -> x+7, self -> y  , 1.0, 0.0, 0.0);
+    // Vertical part
+    for (short r = 0; r < 8; r++) {
+        xx = 0*cos(PI*self->angle/180) - r*sin(PI*(self->angle)/180) + self->x;
+        yy = 0*sin(PI*self->angle/180) + r*cos(PI*(self->angle)/180) + self->y;
+        placePixel(xx, yy, 1.0, 0.0, 0.0);
+    }
 
-    // Middle E
-    placePixel(self -> x+1, self -> y-3, 1.0, 0.0, 0.0);
-    placePixel(self -> x+2, self -> y-3, 1.0, 0.0, 0.0);
-    placePixel(self -> x+3, self -> y-3, 1.0, 0.0, 0.0);
-    placePixel(self -> x+4, self -> y-3, 1.0, 0.0, 0.0);
-    placePixel(self -> x+5, self -> y-3, 1.0, 0.0, 0.0);
-    placePixel(self -> x+6, self -> y-3, 1.0, 0.0, 0.0);
-    placePixel(self -> x+7, self -> y-3, 1.0, 0.0, 0.0);
+    // Top horizontal
+    for (short r = 0; r < 8; r++) {
+        xx = r*cos(PI*self->angle/180) - 0*sin(PI*(self->angle)/180) + self->x;
+        yy = r*sin(PI*self->angle/180) + 0*cos(PI*(self->angle)/180) + self->y;
+        placePixel(xx, yy, 1.0, 0.0, 0.0);
+    }
 
-    // Bottom E
-    placePixel(self -> x+1, self -> y-7, 1.0, 0.0, 0.0);
-    placePixel(self -> x+2, self -> y-7, 1.0, 0.0, 0.0);
-    placePixel(self -> x+3, self -> y-7, 1.0, 0.0, 0.0);
-    placePixel(self -> x+4, self -> y-7, 1.0, 0.0, 0.0);
-    placePixel(self -> x+5, self -> y-7, 1.0, 0.0, 0.0);
-    placePixel(self -> x+6, self -> y-7, 1.0, 0.0, 0.0);
-    placePixel(self -> x+7, self -> y-7, 1.0, 0.0, 0.0);
+    // Middle horizontal
+    for (short r = 0; r < 8; r++) {
+        xx = r*cos(PI*self->angle/180) - 4*sin(PI*(self->angle)/180) + self->x;
+        yy = r*sin(PI*self->angle/180) + 4*cos(PI*(self->angle)/180) + self->y;
+        placePixel(xx, yy, 1.0, 0.0, 0.0);
+    }
+
+    // Bottom horizontal
+    for (short r = 0; r < 8; r++) {
+        xx = r*cos(PI*self->angle/180) - 8*sin(PI*(self->angle)/180) + self->x;
+        yy = r*sin(PI*self->angle/180) + 8*cos(PI*(self->angle)/180) + self->y;
+        placePixel(xx, yy, 1.0, 0.0, 0.0);
+    }
 }
 
 void checkCollisionsEnemyPlane (GameObject* self) {
-    if (self -> health == 0) return;
     bool check = true;
     int i = 0;
     for (int xx = 0; xx < 8; xx++) {
@@ -294,6 +293,20 @@ void onCollideEnemyPlane (GameObject* self) {
     // TODO implement
  }
 
+void dieEnemyPlane (GameObject* self) {
+    game.player.score++;
+    game.game_objects[self -> obj_index] = &game.dummy;
+}
+
+void updateEnemyPlane (GameObject* self) {
+    self -> check_collisions(self);
+    if (self -> health <= 0) {
+        self -> die(self);
+        return;
+    }
+    self -> move(self);
+}
+
 GameObject createEnemyPlane (float x,
                              float y,
                              float angle,
@@ -313,13 +326,14 @@ GameObject createEnemyPlane (float x,
         .check_collisions = &checkCollisionsEnemyPlane,
         .collide = &collideEnemyPlane,
         .on_collide = &onCollideEnemyPlane,
+        .die = &dieEnemyPlane,
+        .update = &updateEnemyPlane,
     };
     return temp;
 }
 
 // Bullet
 void moveBullet (GameObject* self) {
-    if (self -> health == 0) return;
     self -> angle += (((rand()%100)/100.0) - 0.5);
     self -> x += self -> velocity * cos(self -> angle * PI / 180);
     self -> y += self -> velocity * sin(self -> angle * PI / 180);
@@ -340,42 +354,45 @@ void moveBullet (GameObject* self) {
 }
 
 void drawBullet (GameObject* self) {
-    if (self -> health == 0) return;
-    // Vertical E
-    for (int xx = 2; xx < 6; xx++) {
-        for (int yy = 2; yy < 6; yy++) {
-            placePixel(self -> x+xx, self -> y+yy, 1.0, 1.0, 0.0);
-        }
+    short xx = 0;
+    short yy = 0;
+    for (int i = 0; i < 12; i++) {
+        xx = i * cos(PI*self->angle/180);
+        yy = i * sin(PI*self->angle/180);
+        placePixel(self -> x+xx, self -> y+yy, 1.0, 1.0, 0.0);
     }
 }
 
 void checkCollisionsBullet (GameObject* self) {
-    if (self -> health == 0) {
-        game.game_objects[self -> obj_index] = &game.dummy;
-        return;
-    }
     self -> health--;
-    bool check = true;
     int i = 0;
-    for (int xx = 0; xx < 8; xx++) {
-        for (int yy = 0; yy < 8; yy++) {
-            i = game_width * ((int) self -> y + yy) + ((int) self -> x + xx);
-            if (self -> x + xx >= 0 &&
-                self -> x + xx < game_width &&
-                self -> y + yy >= 0 &&
-                self -> y + yy < game_height &&
-                check &&
-                game.game_objects[game.collision_list[i]] -> type != self -> type &&
-                game.game_objects[game.collision_list[i]] -> type >= 1 &&
-                game.collision_list[i] != self -> obj_index) {
-                check = false;
-                self -> collide(self, game.game_objects[game.collision_list[i]]);
-            }
-            if (self -> x + xx >= 0 &&
-                self -> x + xx < game_width &&
-                self -> y + yy >= 0 &&
-                self -> y + yy < game_height) {
-                game.collision_list[i] = self -> obj_index;
+    short x = self -> x;
+    short y = self -> y;
+    bool check = true;
+
+    for (short a = 0; a > -self -> velocity; a--) {
+        x += a*cos(PI*self->angle/180);
+        y += a*sin(PI*self->angle/180);
+        for (int xx = 2; xx < 6; xx++) {
+            for (int yy = 2; yy < 6; yy++) {
+                i = game_width * ((int) y + yy) + ((int) x + xx);
+                if (x + xx >= 0 &&
+                    x + xx < game_width &&
+                    y + yy >= 0 &&
+                    y + yy < game_height &&
+                    check &&
+                    game.game_objects[game.collision_list[i]] -> type != self -> type &&
+                    game.game_objects[game.collision_list[i]] -> type >= 1 &&
+                    game.collision_list[i] != self -> obj_index) {
+                    check = false;
+                    self -> collide(self, game.game_objects[game.collision_list[i]]);
+                }
+                if (x + xx >= 0 &&
+                    x + xx < game_width &&
+                    y + yy >= 0 &&
+                    y + yy < game_height) {
+                    game.collision_list[i] = self -> obj_index;
+                }
             }
         }
     }
@@ -388,11 +405,24 @@ void collideBullet (GameObject* self, GameObject* other) {
 }
 
 void onCollideBullet (GameObject* self) {
-    if (self -> health > 0) self -> health--;
-    game.game_objects[self -> obj_index] = &game.dummy;
+    self -> health = 0;
+    self -> die(self);
     /* printf("Bullet %d hit, freeing spot with dummy\n", self -> obj_index); */
     // TODO implement
  }
+
+void dieBullet (GameObject* self) {
+    game.game_objects[self -> obj_index] = &game.dummy;
+}
+
+void updateBullet (GameObject* self) {
+    self -> check_collisions(self);
+    if (self -> health <= 0) {
+        self -> die(self);
+        return;
+    }
+    self -> move(self);
+}
 
 GameObject createBullet (float x,
                          float y,
@@ -412,6 +442,8 @@ GameObject createBullet (float x,
         .check_collisions = &checkCollisionsBullet,
         .collide = &collideBullet,
         .on_collide = &onCollideBullet,
+        .die = &dieBullet,
+        .update = &updateBullet,
     };
     return temp;
 }
@@ -433,11 +465,20 @@ void movePlayer (GameObject* self) {
 }
 
 void drawPlayer (GameObject* self) {
-    for (int xx = 0; xx < 8; xx++) {
-        for (int yy = 0; yy < 8; yy++) {
-            placePixel(self -> x + xx, self -> y + yy, 0.0, 0.0, 1.0);
+    short xx = 0;
+    short yy = 0;
+    for (short r = 0; r <= 8; r++) {
+        for (short i = -(8-r)/2; i <= (8-r)/2; i++) {
+            xx = r*cos(PI*self->angle/180) + i*cos(PI*(self->angle-90)/180) + self->x;
+            yy = r*sin(PI*self->angle/180) + i*sin(PI*(self->angle-90)/180) + self->y;
+            placePixel(xx, yy, 0.0, 0.0, 1.0);
         }
     }
+    /* for (int xx = 0; xx < 8; xx++) { */
+    /*     for (int yy = 0; yy < 8; yy++) { */
+    /*         placePixel(self -> x + xx, self -> y + yy, 0.0, 0.0, 1.0); */
+    /*     } */
+    /* } */
 }
 
 void checkCollisionsPlayer (GameObject* self) {
@@ -471,7 +512,22 @@ void collidePlayer (GameObject* self, GameObject* other) {
 
 void onCollidePlayer (GameObject* self) {
     game.player.score++;
+    self -> health--;
+    printf("Player health at %d\n!", self -> health);
     /* printf("Player %d score %d!!!\n", self -> obj_index, game.player.score); */
+}
+
+void diePlayer (GameObject* self) {
+    printf("Game Over!!!\nFinal player score: %d\n\n", game.player.score);
+    exit(0);
+}
+
+void updatePlayer (GameObject* self) {
+    self -> check_collisions(self);
+    if (self -> health <= 0) {
+        self -> die(self);
+    }
+    self -> move(self);
 }
 
 void inputPlayer (Player* self, bool* pressed_keys) {
@@ -486,10 +542,12 @@ void inputPlayer (Player* self, bool* pressed_keys) {
     for (unsigned char key = 0; key < 255; key++) {
         switch (key * pressed_keys[key]) {
             case *"a": // A
-                /* self -> game_object.angle += 5; */
+                self -> game_object.angle = angle + 90;
+                if (abs((int)(x+y)) >= 1) self -> game_object.velocity = 2.0;
                 break;
             case *"d": // D
-                /* self -> game_object.angle -= 5; */
+                self -> game_object.angle = angle - 90;
+                if (abs((int)(x+y)) >= 1) self -> game_object.velocity = 2.0;
                 break;
             case *"w": // W
                 if (abs((int)(x+y)) >= 1) self -> game_object.velocity = 2.0;
@@ -501,6 +559,9 @@ void inputPlayer (Player* self, bool* pressed_keys) {
                 /* self -> game_object.velocity -= 0.1; */
                 /* if (self -> game_object.velocity < 0) */
                 /*     self -> game_object.velocity = 0; */
+                self -> game_object.angle = angle - 180;
+                if (abs((int)(x+y)) >= 1) self -> game_object.velocity = 2.0;
+                /* if (abs((int)(x+y)) >= 1) self -> game_object.velocity = -2.0; */
                 break;
             case *" ":; // space, which is the shoot button
                 self -> shoot(self, angle);
@@ -510,7 +571,7 @@ void inputPlayer (Player* self, bool* pressed_keys) {
 }
 
 void shootPlayer (Player* self, float angle) {
-    if (self -> shoot_timer < 2) {
+    if (self -> shoot_timer < 5) {
         self -> shoot_timer++;
         return;
     }
@@ -526,8 +587,8 @@ void shootPlayer (Player* self, float angle) {
         return;
     }
     GameObject temp = createBullet(
-        self -> game_object.x,
-        self -> game_object.y,
+        self -> game_object.x + 8*cos(PI*self->game_object.angle/180),
+        self -> game_object.y + 8*sin(PI*self->game_object.angle/180),
         angle,
         12 + self -> game_object.velocity,
         free_index);
@@ -552,6 +613,8 @@ Player createPlayer (unsigned short x,
             .check_collisions = checkCollisionsPlayer,
             .collide = &collidePlayer,
             .on_collide = &onCollidePlayer,
+            .die = &diePlayer,
+            .update = &updatePlayer,
         },
         .score = 0,
         .input = &inputPlayer,

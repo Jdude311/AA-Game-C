@@ -81,13 +81,13 @@ int main (int argc, char** argv) {
     game.game_objects[0] = &(game.player.game_object);
 
     // Initialize enemies
-    unsigned char NUM_ENEMY_PLANES = 128;
+    unsigned char NUM_ENEMY_PLANES = 32;
     GameObject enemy_planes[NUM_ENEMY_PLANES];
     for (int i = 0; i < NUM_ENEMY_PLANES; i++) {
         enemy_planes[i] = createEnemyPlane(
             rand() % game_width,
             rand() % 300 + game_height - 300,
-            rand() % 360,
+            rand() % 22-11,
             rand() % 4+2,
             i+1,
             5);
