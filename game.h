@@ -5,8 +5,8 @@
 #include <stdbool.h> // booleans, duh
 
 /* CONSTANTS */
-unsigned short game_width = 480;
-unsigned short game_height = 480;
+unsigned short game_width = 680;
+unsigned short game_height = 680;
 
 #define NUM_GAME_OBJECTS 255
 
@@ -56,6 +56,9 @@ struct Player {
     GameObject game_object;
     int score;
     void (*input)(Player *, bool*);
+    void (*shoot)(Player *, float);
+    int shoot_timer;
+    GameObject* bullets;
 };
 
 
@@ -66,6 +69,7 @@ struct Game {
     unsigned char* collision_list;
     bool pressed_keys[255];
     Player player;
+    GameObject dummy;
 
     // GL callback functions
     void (*update)(void);
@@ -73,6 +77,9 @@ struct Game {
     void (*timer)(void);
     void (*keyboard_up)(unsigned char key, int x, int y);
     void (*keyboard_down)(unsigned char key, int x, int y);
+    void (*update_mouse)(int x, int y);
+    int mouse_x;
+    int mouse_y;
 };
 struct Game game;
 
@@ -105,11 +112,20 @@ void display () {
 void keyboardUp (unsigned char key, int x, int y) {
     game.pressed_keys[key] = false;
     game.player.input(&game.player, game.pressed_keys);
+    game.mouse_x = x;
+    game.mouse_y = y;
 }
 
 void keyboardDown (unsigned char key, int x, int y) {
     game.pressed_keys[key] = true;
     game.player.input(&game.player, game.pressed_keys);
+    game.mouse_x = x;
+    game.mouse_y = y;
+}
+
+void updateMouse (int x, int y) {
+    game.mouse_x = x;
+    game.mouse_y = y;
 }
 
 struct Game game = (struct Game) {
@@ -117,6 +133,7 @@ struct Game game = (struct Game) {
     .display = display,
     .keyboard_down = keyboardDown,
     .keyboard_up = keyboardUp,
+    .update_mouse = updateMouse,
 };
 
 // Game Object
@@ -300,6 +317,105 @@ GameObject createEnemyPlane (float x,
     return temp;
 }
 
+// Bullet
+void moveBullet (GameObject* self) {
+    if (self -> health == 0) return;
+    self -> angle += (((rand()%100)/100.0) - 0.5);
+    self -> x += self -> velocity * cos(self -> angle * PI / 180);
+    self -> y += self -> velocity * sin(self -> angle * PI / 180);
+    if (self -> x > game_width) {
+        self -> x -= game_width;
+        self -> collide(self, &game.dummy);
+    } else if (self -> x < 0) {
+        self -> x += game_width;
+        self -> collide(self, &game.dummy);
+    }
+    if (self -> y > game_height) {
+        self -> y -= game_height;
+        self -> collide(self, &game.dummy);
+    } else if (self -> y < 0) {
+        self -> y += game_height;
+        self -> collide(self, &game.dummy);
+    }
+}
+
+void drawBullet (GameObject* self) {
+    if (self -> health == 0) return;
+    // Vertical E
+    for (int xx = 2; xx < 6; xx++) {
+        for (int yy = 2; yy < 6; yy++) {
+            placePixel(self -> x+xx, self -> y+yy, 1.0, 1.0, 0.0);
+        }
+    }
+}
+
+void checkCollisionsBullet (GameObject* self) {
+    if (self -> health == 0) {
+        game.game_objects[self -> obj_index] = &game.dummy;
+        return;
+    }
+    self -> health--;
+    bool check = true;
+    int i = 0;
+    for (int xx = 0; xx < 8; xx++) {
+        for (int yy = 0; yy < 8; yy++) {
+            i = game_width * ((int) self -> y + yy) + ((int) self -> x + xx);
+            if (self -> x + xx >= 0 &&
+                self -> x + xx < game_width &&
+                self -> y + yy >= 0 &&
+                self -> y + yy < game_height &&
+                check &&
+                game.game_objects[game.collision_list[i]] -> type != self -> type &&
+                game.game_objects[game.collision_list[i]] -> type >= 1 &&
+                game.collision_list[i] != self -> obj_index) {
+                check = false;
+                self -> collide(self, game.game_objects[game.collision_list[i]]);
+            }
+            if (self -> x + xx >= 0 &&
+                self -> x + xx < game_width &&
+                self -> y + yy >= 0 &&
+                self -> y + yy < game_height) {
+                game.collision_list[i] = self -> obj_index;
+            }
+        }
+    }
+}
+
+void collideBullet (GameObject* self, GameObject* other) {
+    printf("Collision from Bullet object %d with object %d\n", self -> obj_index, other -> obj_index);
+    self->on_collide(self);
+    other->on_collide(other);
+}
+
+void onCollideBullet (GameObject* self) {
+    if (self -> health > 0) self -> health--;
+    game.game_objects[self -> obj_index] = &game.dummy;
+    printf("Bullet %d hit, freeing spot with dummy\n", self -> obj_index);
+    // TODO implement
+ }
+
+GameObject createBullet (float x,
+                         float y,
+                         float angle,
+                         float velocity,
+                         unsigned char obj_index) {
+    GameObject temp = {
+        .type = 2,
+        .x = x,
+        .y = y,
+        .angle = angle,
+        .velocity = velocity,
+        .obj_index = obj_index,
+        .health = 75,
+        .move = &moveBullet,
+        .draw = &drawBullet,
+        .check_collisions = &checkCollisionsBullet,
+        .collide = &collideBullet,
+        .on_collide = &onCollideBullet,
+    };
+    return temp;
+}
+
 // Player
 void movePlayer (GameObject* self) {
     self -> x += self -> velocity * cos(self -> angle * PI / 180);
@@ -361,24 +477,62 @@ void onCollidePlayer (GameObject* self) {
 void inputPlayer (Player* self, bool* pressed_keys) {
     for (unsigned char key = 0; key < 255; key++) {
         switch (key * pressed_keys[key]) {
-            case 97: // A
-                self -> game_object.angle += 5;
+            case *"a": // A
+                /* self -> game_object.angle += 5; */
+                /* self -> game_object.velocity = 5; */
+                /* self -> game_object.angle = 0; */
                 break;
-            case 100: // D
-                self -> game_object.angle -= 5;
+            case *"d": // D
+                /* self -> game_object.angle -= 5; */
+                /* self -> game_object.velocity = 5; */
+                /* self -> game_object.angle = 180; */
                 break;
-            case 119: // W
-                self -> game_object.velocity += 0.1;
-                if (self -> game_object.velocity > 10)
-                    self -> game_object.velocity = 10;
-                break;
-            case 115: // S
-                self -> game_object.velocity -= 0.1;
-                if (self -> game_object.velocity < 0)
-                    self -> game_object.velocity = 0;
+            /* case *"w": // W */
+            /*     self -> game_object.velocity += 0.1; */
+            /*     if (self -> game_object.velocity > 10) */
+            /*         self -> game_object.velocity = 10; */
+            /*     break; */
+            /* case *"s": // S */
+            /*     self -> game_object.velocity -= 0.1; */
+            /*     if (self -> game_object.velocity < 0) */
+            /*         self -> game_object.velocity = 0; */
+            /*     break; */
+            case *" ":; // space, which is the shoot button
+                int w = glutGet(GLUT_WINDOW_WIDTH);
+                int h = glutGet(GLUT_WINDOW_HEIGHT);
+                float x = ((float) (game.mouse_x) / w)*game_width - self->game_object.x;
+                float y = ((float) (h - game.mouse_y) / h)*game_height - self->game_object.y;
+
+                self -> shoot(self, 180*atan2(y,x)/PI);
                 break;
         }
     }
+}
+
+void shootPlayer (Player* self, float angle) {
+    if (self -> shoot_timer < 5) {
+        self -> shoot_timer++;
+        return;
+    }
+    self -> shoot_timer = 0;
+    short free_index = -1;
+    for (int i = 0; i <= 255; i++) {
+        if (game.game_objects[i] -> type == -1) {
+            free_index = i;
+            break;
+        }
+    }
+    if (free_index == -1) {
+        return;
+    }
+    GameObject temp = createBullet(
+        self -> game_object.x,
+        self -> game_object.y,
+        angle,
+        12 + self -> game_object.velocity,
+        free_index);
+    game.player.bullets[free_index] = temp;
+    game.game_objects[free_index] = &game.player.bullets[free_index];
 }
 
 Player createPlayer (unsigned short x,
@@ -401,6 +555,10 @@ Player createPlayer (unsigned short x,
         },
         .score = 0,
         .input = &inputPlayer,
+        .shoot = &shootPlayer,
+        .shoot_timer = 100,
+        .bullets = malloc(sizeof(GameObject) * 256),
     };
     return temp;
 }
+

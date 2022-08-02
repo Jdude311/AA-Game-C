@@ -69,21 +69,28 @@ int main (int argc, char** argv) {
     // Initialize game objects list
     game.game_objects = malloc(sizeof(GameObject*) * NUM_GAME_OBJECTS+1);
 
+
     // Fill game list with dummy object
-    GameObject dummy = createDummy();
+    game.dummy = createDummy();
     for (int i = 0; i <= NUM_GAME_OBJECTS; i++) {
-        game.game_objects[i] = &dummy;
+        game.game_objects[i] = &game.dummy;
     }
 
     // Initialize player
-    game.player = createPlayer(240, 240, 0, 10);
+    game.player = createPlayer(game_width/2, 0, 0, 10);
     game.game_objects[0] = &(game.player.game_object);
 
     // Initialize enemies
-    unsigned char NUM_ENEMY_PLANES = 10;
+    unsigned char NUM_ENEMY_PLANES = 20;
     GameObject enemy_planes[NUM_ENEMY_PLANES];
     for (int i = 0; i < NUM_ENEMY_PLANES; i++) {
-        enemy_planes[i] = createEnemyPlane(10*i, 0, 15*i, 1, i+1, 1);
+        enemy_planes[i] = createEnemyPlane(
+            rand() % game_width,
+            rand() % 300 + game_height - 300,
+            rand() % 360,
+            rand() % 4+2,
+            i+1,
+            10);
         // Put object pointers in game_objects list
         game.game_objects[i+1] = &enemy_planes[i];
         game.game_objects[i+1] -> move(game.game_objects[i+1]);
@@ -100,6 +107,7 @@ int main (int argc, char** argv) {
     glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
     glutKeyboardFunc(game.keyboard_down);
     glutKeyboardUpFunc(game.keyboard_up);
+    glutPassiveMotionFunc(game.update_mouse);
     /* glutKeyboardFunc(game.input); */
 
     /* TEST CLASSES */

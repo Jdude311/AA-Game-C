@@ -1,7 +1,7 @@
 all: main run
 
 CC = clang
-override CFLAGS += -g -Wno-everything -pthread -lm -lGL -lGLU -lglut
+override CFLAGS += -g -Wno-everything -pthread -lm -lGL -lGLU -lglut -g
 
 SRCS = $(shell find . -name '.ccls-cache' -type d -prune -o -type f -name '*.c' -print)
 OBJS = $(SRCS:.c=.o)
