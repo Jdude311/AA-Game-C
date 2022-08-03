@@ -77,7 +77,7 @@ int main (int argc, char** argv) {
     }
 
     // Initialize player
-    game.player = createPlayer(game_width/2, 0, 0, 10);
+    game.player = createPlayer(game_width/2, 50, 0, 10);
     game.game_objects[0] = &(game.player.game_object);
 
     // Initialize enemies
