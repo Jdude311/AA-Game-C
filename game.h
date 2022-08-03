@@ -548,7 +548,7 @@ void inputPlayer (Player* self, bool* pressed_keys) {
                 self -> game_object.velocity -= 0.05;
                 break;
             case *"w": // W
-                self -> game_object.velocity += 0.1;
+                if (self->game_object.velocity < 10) self -> game_object.velocity += 0.1;
                 break;
             case *"s": // S
                 self -> game_object.velocity -= 0.1;
@@ -560,16 +560,12 @@ void inputPlayer (Player* self, bool* pressed_keys) {
     }
     if (self -> game_object.velocity < 0)
         self -> game_object.velocity = 0;
-    if (self -> game_object.velocity > 10)
-        self -> game_object.velocity = 10;
+    if (self -> game_object.velocity > 20)
+        self -> game_object.velocity = 20;
 
     float v_x = self->game_object.velocity*cos(self->game_object.angle*PI/180);
-    float v_y = self->game_object.velocity*sin(self->game_object.angle*PI/180) - (1-pressed_keys[(int)*"w"])*0.05; //- (0.1*(pow(0.9, fabsf(self->game_object.velocity))));
-    if (v_x>0) {// && !(pressed_keys[(int)*"a"] || pressed_keys[(int)*"d"])) {
-        self->game_object.angle = 180*atan(v_y/v_x)/PI;
-    } else if (self->game_object.velocity==0&&!(pressed_keys[(int)*"a"] || pressed_keys[(int)*"d"])) {
-        self->game_object.angle = 270;
-    }
+    float v_y = self->game_object.velocity*sin(self->game_object.angle*PI/180) - (0.2*(pow(0.75, fabsf(self->game_object.velocity))));
+    self->game_object.angle = 180*atan2(v_y,v_x)/PI;
     self->game_object.velocity=sqrt(pow(v_x,2) + pow(v_y,2));
 }
 
